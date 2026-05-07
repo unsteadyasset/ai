@@ -1,65 +1,85 @@
-import Image from "next/image";
+import { TopBar } from '@/components/top-bar'
+import { HeroStats } from '@/components/dashboard/hero-stats'
+import { Leaderboard } from '@/components/dashboard/leaderboard'
+import { AlertsFeed } from '@/components/dashboard/alerts-feed'
+import { NewsFeed } from '@/components/dashboard/news-feed'
+import { ReportForm } from '@/components/dashboard/report-form'
+import { Chatbot } from '@/components/dashboard/chatbot'
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen flex flex-col">
+      <TopBar variant="public" />
+
+      <main className="flex-1 container mx-auto px-4 py-6 space-y-6 max-w-7xl">
+        {/* Hero */}
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-mono tracking-widest text-muted-foreground">
+              LIVE NATIONAL OVERVIEW
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            Kenya Forest Intelligence
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-muted-foreground max-w-2xl">
+            Real-time satellite-powered monitoring of forest cover, threats, and
+            conservation efforts across all 47 counties.
           </p>
+        </section>
+
+        {/* Stats */}
+        <HeroStats />
+
+        {/* Main grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Leaderboard />
+          <AlertsFeed />
+          <NewsFeed />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Report */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ReportForm />
+          <div className="rounded-xl border bg-gradient-to-br from-primary/5 via-card to-emerald-500/5 p-6 flex flex-col justify-center">
+            <h3 className="text-lg font-bold mb-2">Help Protect Kenya's Forests</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Your reports power our AI. Every submission is reviewed by KWS rangers.
+              Anonymous reporting protects you. Photos help us verify faster.
+            </p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-2xl font-bold text-primary">1,247</p>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase">
+                  Reports Verified
+                </p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-primary">89</p>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase">
+                  Arrests Made
+                </p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-primary">340Ha</p>
+                <p className="text-[10px] font-mono text-muted-foreground uppercase">
+                  Forest Saved
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <footer className="pt-8 pb-4 border-t">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-muted-foreground font-mono">
+            <span>POWERED BY SENTINEL-2 • NDVI ANALYSIS • GROQ AI</span>
+            <span>© KENYA FOREST SERVICE • 2026</span>
+          </div>
+        </footer>
       </main>
+
+      <Chatbot context="public" />
     </div>
-  );
+  )
 }
