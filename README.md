@@ -2,9 +2,9 @@
 
 > Real-time satellite-powered forest monitoring & AI threat detection for Kenya Forest Service
 
-**Live Demo:** [your-vercel-url.vercel.app](https://your-vercel-url.vercel.app)
+**Live Demo:** UPCOMING
 
-**Ranger Console Access:** Password `Two Term` at `/console/login`
+
 
 ---
 
@@ -72,6 +72,6 @@ An AI-powered platform that helps Kenya Forest Service (KFS) rangers detect ille
 ### Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-land-surveillance.git
+git clone https://github.com/unsteadyasset/ai-land-surveillance.git
 cd ai-land-surveillance
 pnpm install
