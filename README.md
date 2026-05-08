@@ -72,6 +72,6 @@ An AI-powered platform that helps Kenya Forest Service (KFS) rangers detect ille
 ### Setup
 
 ```bash
-git clone https://github.com/unsteadyasset/ai-land-surveillance.git
+git clone https://github.com/unsteadyasset/ai.git
 cd ai-land-surveillance
 pnpm install
