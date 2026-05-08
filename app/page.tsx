@@ -12,21 +12,36 @@ export default function HomePage() {
       <TopBar variant="public" />
 
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6 max-w-7xl">
-        {/* Hero */}
-        <section className="space-y-2">
+                {/* Hero */}
+        <section className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[10px] font-mono tracking-widest text-muted-foreground">
-              LIVE NATIONAL OVERVIEW
+              LIVE NATIONAL OVERVIEW • SENTINEL-2 FEED ACTIVE
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
             Kenya Forest Intelligence
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Real-time satellite-powered monitoring of forest cover, threats, and
-            conservation efforts across all 47 counties.
+          <p className="text-muted-foreground max-w-2xl text-base">
+            Real-time satellite-powered monitoring of forest cover, AI-detected threats,
+            and conservation efforts across all 47 counties. Powered by NDVI analysis
+            and deep learning.
           </p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
+              SENTINEL-2 IMAGERY
+            </span>
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+              NDVI ANALYSIS
+            </span>
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30">
+              GROQ AI INTELLIGENCE
+            </span>
+            <span className="text-[10px] font-mono px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30">
+              REAL-TIME ALERTS
+            </span>
+          </div>
         </section>
 
         {/* Stats */}

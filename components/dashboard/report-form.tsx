@@ -1,17 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Send, MapPin, Upload } from 'lucide-react'
+import { Send, MapPin, Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 export function ReportForm() {
   const [loading, setLoading] = useState(false)
+  const [photos, setPhotos] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
+  const fileRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({
     report_type: 'illegal_logging',
     description: '',
@@ -21,12 +24,44 @@ export function ReportForm() {
     is_anonymous: true,
   })
 
+  function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 3)
+    if (files.length === 0) return
+    setPhotos(files)
+    setPreviews(files.map((f) => URL.createObjectURL(f)))
+  }
+
+  function removePhoto(i: number) {
+    setPhotos((p) => p.filter((_, idx) => idx !== i))
+    setPreviews((p) => p.filter((_, idx) => idx !== i))
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.from('reports').insert([form])
+
+    // Upload photos first
+    const photoUrls: string[] = []
+    for (const photo of photos) {
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}-${photo.name}`
+      const { data, error } = await supabase.storage
+        .from('report-photos')
+        .upload(fileName, photo)
+      if (!error && data) {
+        const { data: urlData } = supabase.storage
+          .from('report-photos')
+          .getPublicUrl(data.path)
+        photoUrls.push(urlData.publicUrl)
+      }
+    }
+
+    const { error } = await supabase
+      .from('reports')
+      .insert([{ ...form, photo_urls: photoUrls }])
+
     setLoading(false)
+
     if (error) {
       toast.error('Failed to submit. Try again.')
     } else {
@@ -39,6 +74,9 @@ export function ReportForm() {
         reporter_contact: '',
         is_anonymous: true,
       })
+      setPhotos([])
+      setPreviews([])
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
@@ -47,7 +85,7 @@ export function ReportForm() {
       <div className="mb-4">
         <h3 className="font-semibold mb-1">Report an Incident</h3>
         <p className="text-xs text-muted-foreground">
-          Submit reports of illegal logging, fires, or planned tree cutting. Anonymous allowed.
+          Submit reports of illegal logging, fires, or planned tree cutting. Anonymous allowed. Photos help us verify faster.
         </p>
       </div>
 
@@ -93,6 +131,52 @@ export function ReportForm() {
           />
         </div>
 
+        {/* Photo upload */}
+        <div>
+          <Label className="text-xs">Photos (optional, up to 3)</Label>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFiles}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="mt-1 w-full h-20 border-2 border-dashed rounded-md flex flex-col items-center justify-center gap-1 hover:bg-muted/40 transition cursor-pointer"
+          >
+            <Upload className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              {photos.length > 0
+                ? `${photos.length} photo${photos.length > 1 ? 's' : ''} selected`
+                : 'Click to upload photos'}
+            </span>
+          </button>
+
+          {previews.length > 0 && (
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {previews.map((src, i) => (
+                <div key={i} className="relative group aspect-square">
+                  <img
+                    src={src}
+                    alt={`Preview ${i + 1}`}
+                    className="w-full h-full object-cover rounded-md border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -124,8 +208,8 @@ export function ReportForm() {
         )}
 
         <Button type="submit" disabled={loading} className="w-full gap-2">
-          <Send className="h-3.5 w-3.5" />
-          {loading ? 'Sending...' : 'Submit Report'}
+          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+          {loading ? 'Submitting...' : 'Submit Report'}
         </Button>
       </form>
     </Card>

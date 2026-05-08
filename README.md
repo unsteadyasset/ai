@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌍 AI Powered Land Surveillance System
 
-## Getting Started
+> Real-time satellite-powered forest monitoring & AI threat detection for Kenya Forest Service
 
-First, run the development server:
+**Live Demo:** [your-vercel-url.vercel.app](https://your-vercel-url.vercel.app)
+
+**Ranger Console Access:** Password `Two Term` at `/console/login`
+
+---
+
+## 🎯 Project Overview
+
+An AI-powered platform that helps Kenya Forest Service (KFS) rangers detect illegal logging, fires, and encroachment using:
+
+- 🛰️ **Sentinel-2 satellite imagery** (free ESA data)
+- 🌿 **NDVI analysis** for vegetation health
+- 🤖 **Groq AI (Llama 3.3 70B)** for threat analysis & dispatch recommendations
+- 📍 **Real-time geospatial mapping** with MapLibre GL
+- 👥 **Public reporting system** with photo evidence
+
+---
+
+## ✨ Features
+
+### Public Dashboard
+- National forest cover statistics (47 counties)
+- County leaderboard (growth & cover)
+- Live threat feed
+- Forestry news aggregator
+- Anonymous incident reporting with photos
+- AI chatbot assistant
+
+### Ranger Console (password-protected)
+- Full-screen interactive map of Kenya
+- 4 layer modes: Satellite / NDVI / Terrain / Navigate
+- Flashing threat markers with severity color-coding
+- Forest reserve & county boundary overlays
+- 5-year temporal slider for historical comparison
+- AI-generated tactical briefings per threat
+- Dispatch system with Google Maps integration
+- Real-time public reports drawer
+- AI batch analysis of incoming reports
+- Ranger intelligence chatbot
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Styling | TailwindCSS v4 + shadcn/ui |
+| Map | MapLibre GL + MapTiler |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase + cookie-based ranger session |
+| AI | Groq (Llama 3.3 70B) |
+| Storage | Supabase Storage (report photos) |
+| Deployment | Vercel |
+| Animations | Framer Motion |
+
+---
+
+## 🚀 Local Development
+
+### Prerequisites
+- Node.js 18+
+- pnpm
+- Supabase account
+- Groq API key
+- MapTiler API key
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+git clone https://github.com/YOUR_USERNAME/ai-land-surveillance.git
+cd ai-land-surveillance
+pnpm install

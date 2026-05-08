@@ -1,0 +1,50 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Mau Forest Complex", "type": "forest_reserve", "area_ha": 416000 },
+      "geometry": { "type": "Polygon", "coordinates": [[[35.6, -0.3],[36.1, -0.3],[36.1, -0.7],[35.6, -0.7],[35.6, -0.3]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Aberdare Forest", "type": "forest_reserve", "area_ha": 250000 },
+      "geometry": { "type": "Polygon", "coordinates": [[[36.55, -0.2],[36.85, -0.2],[36.85, -0.65],[36.55, -0.65],[36.55, -0.2]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Mount Kenya Forest", "type": "forest_reserve", "area_ha": 213000 },
+      "geometry": { "type": "Polygon", "coordinates": [[[37.15, -0.0],[37.55, -0.0],[37.55, -0.4],[37.15, -0.4],[37.15, -0.0]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kakamega Forest", "type": "forest_reserve", "area_ha": 23800 },
+      "geometry": { "type": "Polygon", "coordinates": [[[34.82, 0.40],[34.95, 0.40],[34.95, 0.30],[34.82, 0.30],[34.82, 0.40]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Mount Elgon Forest", "type": "forest_reserve", "area_ha": 73700 },
+      "geometry": { "type": "Polygon", "coordinates": [[[34.45, 1.20],[34.65, 1.20],[34.65, 1.05],[34.45, 1.05],[34.45, 1.20]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Cherangany Forest", "type": "forest_reserve", "area_ha": 95600 },
+      "geometry": { "type": "Polygon", "coordinates": [[[35.35, 1.35],[35.55, 1.35],[35.55, 1.15],[35.35, 1.15],[35.35, 1.35]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Arabuko-Sokoke Forest", "type": "forest_reserve", "area_ha": 42000 },
+      "geometry": { "type": "Polygon", "coordinates": [[[39.85, -3.25],[40.00, -3.25],[40.00, -3.40],[39.85, -3.40],[39.85, -3.25]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Karura Forest", "type": "forest_reserve", "area_ha": 1041 },
+      "geometry": { "type": "Polygon", "coordinates": [[[36.82, -1.22],[36.86, -1.22],[36.86, -1.26],[36.82, -1.26],[36.82, -1.22]]] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Ngong Road Forest", "type": "forest_reserve", "area_ha": 1224 },
+      "geometry": { "type": "Polygon", "coordinates": [[[36.65, -1.34],[36.71, -1.34],[36.71, -1.40],[36.65, -1.40],[36.65, -1.34]]] }
+    }
+  ]
+}

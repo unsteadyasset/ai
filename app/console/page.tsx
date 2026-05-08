@@ -1,19 +1,27 @@
 import { MapView } from '@/components/console/map-view'
-import { LensPills } from '@/components/console/lens-pills'
-import { LayerPicker } from '@/components/console/layer-picker'
+import { LensPicker } from '@/components/console/lens-picker'
+import { SideControls } from '@/components/console/side-controls'
+import { ThreatModal } from '@/components/console/threat-modal'
 import { TemporalSlider } from '@/components/console/temporal-slider'
-import { StatusBar } from '@/components/console/status-bar'
-import { ConsoleTopBar } from '@/components/console/console-topbar'
+import { NdviLegend } from '@/components/console/ndvi-legend'
+import { ConsoleStats } from '@/components/console/console-stats'
+import { Chatbot } from '@/components/dashboard/chatbot'
+import { TopBar } from '@/components/top-bar'
 
 export default function ConsolePage() {
   return (
-    <div className="h-screen w-screen overflow-hidden relative bg-background">
-      <MapView />
-      <ConsoleTopBar />
-      <LensPills />
-      <LayerPicker />
-      <TemporalSlider />
-      <StatusBar />
+    <div className="h-screen w-screen flex flex-col overflow-hidden fixed inset-0">
+      <TopBar variant="console" />
+      <div className="flex-1 relative w-full" style={{ height: 'calc(100vh - 56px)' }}>
+        <MapView />
+        <LensPicker />
+        <SideControls />
+        <ConsoleStats />
+        <NdviLegend />
+        <TemporalSlider />
+        <ThreatModal />
+        <Chatbot context="ranger" />
+      </div>
     </div>
   )
 }
