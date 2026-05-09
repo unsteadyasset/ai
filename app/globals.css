@@ -180,3 +180,18 @@ body {
     @apply font-sans;
   }
 }
+
+/* Custom cursor — hide on touch */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a, button, [role="button"], input, textarea, select {
+    cursor: none;
+  }
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}

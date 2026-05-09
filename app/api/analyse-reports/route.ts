@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { groq, LLM_MODEL, SYSTEM_PROMPTS } from '@/lib/groq'
+import Groq from 'groq-sdk'
+
+export const runtime = 'nodejs'
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+})
+
+const LLM_MODEL = 'llama-3.3-70b-versatile'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,11 +28,11 @@ export async function POST(req: NextRequest) {
 
     const prompt = `Analyze this batch of public reports submitted to Kenya Forest Service. Identify:
 
-1. 🔥 URGENT PATTERNS (clusters, hotspots, repeat reports from same area)
-2. 🎯 TOP 3 PRIORITY REPORTS that need immediate dispatch
-3. 📊 TREND ANALYSIS (any concerning patterns in time, location, or type)
-4. 🚨 SUSPICIOUS REPORTS that may need verification (false alarms, duplicates)
-5. ✅ RECOMMENDED ACTIONS for the dispatch team
+1. URGENT PATTERNS (clusters, hotspots, repeat reports from same area)
+2. TOP 3 PRIORITY REPORTS that need immediate dispatch
+3. TREND ANALYSIS (any concerning patterns in time, location, or type)
+4. SUSPICIOUS REPORTS that may need verification (false alarms, duplicates)
+5. RECOMMENDED ACTIONS for the dispatch team
 
 REPORTS:
 ${summary}
@@ -34,7 +42,11 @@ Be tactical, concise, and use bullet points. Maximum 250 words.`
     const completion = await groq.chat.completions.create({
       model: LLM_MODEL,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPTS.ranger },
+        {
+          role: 'system',
+          content:
+            'You are the Intelligence Unit AI for Kenya Forest Service. Be precise, tactical, and operational.',
+        },
         { role: 'user', content: prompt },
       ],
       temperature: 0.4,

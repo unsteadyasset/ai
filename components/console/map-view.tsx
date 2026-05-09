@@ -46,6 +46,13 @@ interface LowCanopy {
   priority: string
 }
 
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: '#E04444',
+  high: '#F97316',
+  medium: '#F4B740',
+  low: '#16A34A',
+}
+
 export function MapView() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MLMap | null>(null)
@@ -79,7 +86,7 @@ export function MapView() {
     load()
   }, [])
 
-  // Init map
+  // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !MAPTILER_KEY) return
 
@@ -89,11 +96,17 @@ export function MapView() {
       center: [37.9062, -0.0236],
       zoom: 6,
       attributionControl: false,
+      pixelRatio: window.devicePixelRatio || 1,
     })
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
-    map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-right')
-    map.on('mousemove', (e) => setCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng }))
+    map.addControl(
+      new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }),
+      'bottom-right'
+    )
+    map.on('mousemove', (e) =>
+      setCoords({ lat: e.lngLat.lat, lng: e.lngLat.lng })
+    )
     map.on('error', (e) => console.error('MapLibre error:', e.error))
 
     map.on('load', () => {
@@ -119,7 +132,7 @@ export function MapView() {
     })
   }, [layer, mapReady])
 
-  // Toggle layers
+  // Toggle visibility
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
@@ -137,58 +150,123 @@ export function MapView() {
     else map.once('idle', apply)
   }, [showCounties, showReserves, mapReady])
 
-  // Threat markers (only show if year is current OR threat date matches)
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !mapReady || threats.length === 0) return
-
-    const isLive = year === 2026
-    const visibleThreats = isLive
-      ? threats
-      : threats.filter((t) => new Date(t.detected_at).getFullYear() === year)
-
-    const markers: maplibregl.Marker[] = []
-    visibleThreats.forEach((t) => {
-      const el = document.createElement('div')
-      el.style.cursor = 'pointer'
-      el.style.width = '24px'
-      el.style.height = '24px'
-      el.style.position = 'relative'
-
-      const color =
-        t.severity === 'critical'
-          ? '#E04444'
-          : t.severity === 'high'
-          ? '#F97316'
-          : t.severity === 'medium'
-          ? '#F4B740'
-          : '#16A34A'
-
-      el.innerHTML = `
-        <div style="position:absolute;inset:0;border-radius:9999px;background:${color};opacity:0.4;animation:pulse-ring 1.5s ease-out infinite;"></div>
-        <div style="position:absolute;inset:0;border-radius:9999px;background:${color};border:2px solid white;box-shadow:0 4px 12px rgba(0,0,0,0.4);animation:pulse-threat 1.5s ease-in-out infinite;"></div>
-      `
-      el.addEventListener('click', (e) => {
-        e.stopPropagation()
-        setSelectedThreat(t.id)
-        map.flyTo({ center: [t.longitude, t.latitude], zoom: 13, duration: 1500 })
-      })
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([t.longitude, t.latitude])
-        .addTo(map)
-      markers.push(marker)
-    })
-
-    return () => markers.forEach((m) => m.remove())
-  }, [threats, mapReady, year, setSelectedThreat])
-
-  // NDVI overlay (when layer is ndvi) — color reserves by NDVI value for selected year
+  // THREAT MARKERS — native WebGL circle layer (truly geo-anchored)
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
 
     const apply = () => {
-      // Remove existing ndvi heat circles
+      // Cleanup previous
+      ;['threats-pulse', 'threats-core', 'threats-hit'].forEach((id) => {
+        if (map.getLayer(id)) map.removeLayer(id)
+      })
+      if (map.getSource('threats-src')) map.removeSource('threats-src')
+
+      if (threats.length === 0) return
+
+      const isLive = year === 2026
+      const visible = isLive
+        ? threats
+        : threats.filter((t) => new Date(t.detected_at).getFullYear() === year)
+
+      const features = visible.map((t) => ({
+        type: 'Feature' as const,
+        properties: {
+          id: t.id,
+          severity: t.severity,
+          color: SEVERITY_COLORS[t.severity] || '#16A34A',
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [t.longitude, t.latitude],
+        },
+      }))
+
+      map.addSource('threats-src', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features },
+      })
+
+      // Outer pulsing ring
+      map.addLayer({
+        id: 'threats-pulse',
+        type: 'circle',
+        source: 'threats-src',
+        paint: {
+          'circle-radius': 18,
+          'circle-color': ['get', 'color'],
+          'circle-opacity': 0.25,
+          'circle-blur': 0.3,
+        },
+      })
+
+      // Solid core marker
+      map.addLayer({
+        id: 'threats-core',
+        type: 'circle',
+        source: 'threats-src',
+        paint: {
+          'circle-radius': 8,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FFFFFF',
+        },
+      })
+
+      // Invisible hit area for easier clicking
+      map.addLayer({
+        id: 'threats-hit',
+        type: 'circle',
+        source: 'threats-src',
+        paint: {
+          'circle-radius': 20,
+          'circle-color': '#000000',
+          'circle-opacity': 0,
+        },
+      })
+
+      // Click handler
+      map.on('click', 'threats-hit', (e) => {
+        const f = e.features?.[0]
+        if (!f) return
+        const id = f.properties?.id as string
+        const coords = (f.geometry as any).coordinates as [number, number]
+        setSelectedThreat(id)
+        map.flyTo({ center: coords, zoom: 13, duration: 1500 })
+      })
+
+      map.on('mouseenter', 'threats-hit', () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map.on('mouseleave', 'threats-hit', () => {
+        map.getCanvas().style.cursor = ''
+      })
+
+      // Pulse animation - update circle radius over time
+      let frame = 0
+      const animate = () => {
+        if (!map.getLayer('threats-pulse')) return
+        frame += 1
+        const pulseRadius = 18 + Math.sin(frame / 15) * 8
+        map.setPaintProperty('threats-pulse', 'circle-radius', pulseRadius)
+        const pulseOpacity = 0.25 + Math.sin(frame / 15) * 0.15
+        map.setPaintProperty('threats-pulse', 'circle-opacity', pulseOpacity)
+        requestAnimationFrame(animate)
+      }
+      animate()
+    }
+
+    if (map.isStyleLoaded()) apply()
+    else map.once('idle', apply)
+  }, [threats, mapReady, year, setSelectedThreat])
+
+  // NDVI overlay
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) return
+
+    const apply = () => {
+      if (map.getLayer('ndvi-heat-label')) map.removeLayer('ndvi-heat-label')
       if (map.getLayer('ndvi-heat')) map.removeLayer('ndvi-heat')
       if (map.getSource('ndvi-heat')) map.removeSource('ndvi-heat')
 
@@ -200,6 +278,7 @@ export function MapView() {
         properties: {
           ndvi: d.avg_ndvi,
           name: d.reserve_name,
+          ndviLabel: `${(d.avg_ndvi * 100).toFixed(0)}%`,
         },
         geometry: {
           type: 'Point' as const,
@@ -217,7 +296,15 @@ export function MapView() {
         type: 'circle',
         source: 'ndvi-heat',
         paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 40, 10, 80],
+          'circle-radius': [
+            'interpolate',
+            ['exponential', 2],
+            ['zoom'],
+            5, 25,
+            7, 50,
+            9, 100,
+            12, 280,
+          ],
           'circle-color': [
             'interpolate',
             ['linear'],
@@ -227,8 +314,28 @@ export function MapView() {
             0.7, '#84CC16',
             0.85, '#16A34A',
           ],
-          'circle-opacity': 0.55,
-          'circle-blur': 0.6,
+          'circle-opacity': 0.45,
+          'circle-blur': 0.4,
+          'circle-stroke-width': 1.5,
+          'circle-stroke-color': '#FFFFFF',
+          'circle-stroke-opacity': 0.3,
+        },
+      })
+
+      map.addLayer({
+        id: 'ndvi-heat-label',
+        type: 'symbol',
+        source: 'ndvi-heat',
+        layout: {
+          'text-field': ['get', 'ndviLabel'],
+          'text-size': 13,
+          'text-font': ['Open Sans Bold'],
+          'text-anchor': 'center',
+        },
+        paint: {
+          'text-color': '#FFFFFF',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.5,
         },
       })
     }
@@ -237,48 +344,116 @@ export function MapView() {
     else map.once('idle', apply)
   }, [layer, year, ndviData, mapReady])
 
-  // Low canopy markers (only show on NDVI or terrain layer)
+  // LOW CANOPY MARKERS — native WebGL
   useEffect(() => {
     const map = mapRef.current
     if (!map || !mapReady) return
 
-    const showLowCanopy = layer === 'ndvi' || layer === 'terrain'
-    if (!showLowCanopy) return
+    const apply = () => {
+      ;['lowcanopy-ring', 'lowcanopy-core', 'lowcanopy-hit'].forEach((id) => {
+        if (map.getLayer(id)) map.removeLayer(id)
+      })
+      if (map.getSource('lowcanopy-src')) map.removeSource('lowcanopy-src')
 
-    const markers: maplibregl.Marker[] = []
-    lowCanopy.forEach((z) => {
-      const el = document.createElement('div')
-      el.style.cursor = 'pointer'
-      const color = z.priority === 'high' ? '#F97316' : z.priority === 'medium' ? '#F4B740' : '#84CC16'
-      el.innerHTML = `
-        <div style="position:relative;width:18px;height:18px;">
-          <div style="position:absolute;inset:0;border-radius:9999px;background:${color};opacity:0.25;transform:scale(2.2);"></div>
-          <div style="position:absolute;inset:0;border-radius:9999px;background:${color};border:2px dashed white;"></div>
-        </div>
-      `
+      const showLowCanopy = layer === 'ndvi' || layer === 'terrain'
+      if (!showLowCanopy || lowCanopy.length === 0) return
 
-      const popup = new maplibregl.Popup({ offset: 18, closeButton: false }).setHTML(`
-        <div style="font-family:system-ui;padding:4px 6px;">
-          <div style="font-size:10px;font-family:monospace;color:#999;letter-spacing:1px;margin-bottom:2px;">REFOREST CANDIDATE</div>
-          <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${z.name}</div>
-          <div style="font-size:11px;color:#666;">${z.county} • ${z.current_cover_percent}% cover</div>
-          <div style="font-size:11px;color:${color};font-weight:600;margin-top:4px;text-transform:uppercase;">${z.priority} PRIORITY</div>
-        </div>
-      `)
+      const features = lowCanopy.map((z) => ({
+        type: 'Feature' as const,
+        properties: {
+          name: z.name,
+          county: z.county,
+          cover: z.current_cover_percent,
+          priority: z.priority,
+          color:
+            z.priority === 'high'
+              ? '#F97316'
+              : z.priority === 'medium'
+              ? '#F4B740'
+              : '#84CC16',
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [z.longitude, z.latitude],
+        },
+      }))
 
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([z.longitude, z.latitude])
-        .setPopup(popup)
-        .addTo(map)
-      markers.push(marker)
-    })
+      map.addSource('lowcanopy-src', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features },
+      })
 
-    return () => markers.forEach((m) => m.remove())
+      map.addLayer({
+        id: 'lowcanopy-ring',
+        type: 'circle',
+        source: 'lowcanopy-src',
+        paint: {
+          'circle-radius': 16,
+          'circle-color': ['get', 'color'],
+          'circle-opacity': 0.2,
+        },
+      })
+
+      map.addLayer({
+        id: 'lowcanopy-core',
+        type: 'circle',
+        source: 'lowcanopy-src',
+        paint: {
+          'circle-radius': 7,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#FFFFFF',
+        },
+      })
+
+      map.addLayer({
+        id: 'lowcanopy-hit',
+        type: 'circle',
+        source: 'lowcanopy-src',
+        paint: {
+          'circle-radius': 18,
+          'circle-color': '#000000',
+          'circle-opacity': 0,
+        },
+      })
+
+      // Click → popup
+      map.on('click', 'lowcanopy-hit', (e) => {
+        const f = e.features?.[0]
+        if (!f) return
+        const p = f.properties
+        const coords = (f.geometry as any).coordinates as [number, number]
+        new maplibregl.Popup({ offset: 12, closeButton: false })
+          .setLngLat(coords)
+          .setHTML(`
+            <div style="font-family:system-ui;padding:4px 6px;">
+              <div style="font-size:10px;font-family:monospace;color:#999;letter-spacing:1px;margin-bottom:2px;">REFOREST CANDIDATE</div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${p?.name}</div>
+              <div style="font-size:11px;color:#666;">${p?.county} • ${p?.cover}% cover</div>
+              <div style="font-size:11px;color:${p?.color};font-weight:600;margin-top:4px;text-transform:uppercase;">${p?.priority} PRIORITY</div>
+            </div>
+          `)
+          .addTo(map)
+      })
+
+      map.on('mouseenter', 'lowcanopy-hit', () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map.on('mouseleave', 'lowcanopy-hit', () => {
+        map.getCanvas().style.cursor = ''
+      })
+    }
+
+    if (map.isStyleLoaded()) apply()
+    else map.once('idle', apply)
   }, [lowCanopy, layer, mapReady])
 
   function addBaseOverlays(map: MLMap) {
     if (!map.getSource('counties')) {
-      map.addSource('counties', { type: 'geojson', data: '/data/kenya-counties.geojson' })
+      map.addSource('counties', {
+        type: 'geojson',
+        data: '/data/kenya-counties.geojson',
+      })
       map.addLayer({
         id: 'counties-fill',
         type: 'fill',
@@ -293,7 +468,10 @@ export function MapView() {
       })
     }
     if (!map.getSource('reserves')) {
-      map.addSource('reserves', { type: 'geojson', data: '/data/kenya-reserves.geojson' })
+      map.addSource('reserves', {
+        type: 'geojson',
+        data: '/data/kenya-reserves.geojson',
+      })
       map.addLayer({
         id: 'reserves-fill',
         type: 'fill',
@@ -332,7 +510,12 @@ export function MapView() {
       <div
         ref={containerRef}
         className="absolute inset-0"
-        style={{ width: '100%', height: '100%', minHeight: '500px', background: '#0A0F0D' }}
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '500px',
+          background: '#0A0F0D',
+        }}
       />
 
       {error && (
@@ -345,7 +528,9 @@ export function MapView() {
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <div className="text-center">
             <div className="inline-block h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-sm font-mono text-muted-foreground">INITIALIZING SATELLITE FEED...</p>
+            <p className="text-sm font-mono text-muted-foreground">
+              INITIALIZING SATELLITE FEED...
+            </p>
           </div>
         </div>
       )}
@@ -354,7 +539,9 @@ export function MapView() {
         <div className="flex gap-4">
           <span>LAT: {coords.lat.toFixed(6)}</span>
           <span>LNG: {coords.lng.toFixed(6)}</span>
-          <span className="hidden md:inline">IMAGERY: {year} {year === 2026 ? '• LIVE' : '• ARCHIVE'}</span>
+          <span className="hidden md:inline">
+            IMAGERY: {year} {year === 2026 ? '• LIVE' : '• ARCHIVE'}
+          </span>
         </div>
         <div className="hidden sm:flex gap-4">
           <span className="text-primary">● {layer.toUpperCase()}</span>
@@ -363,4 +550,4 @@ export function MapView() {
       </div>
     </>
   )
-} 
+}

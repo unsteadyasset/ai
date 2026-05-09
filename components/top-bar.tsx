@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Satellite, Shield, LogOut } from 'lucide-react'
+import { Satellite, Shield, LogOut, AlertTriangle } from 'lucide-react'
 import { ThemeToggle } from './theme-toggle'
 import { Button } from './ui/button'
 import { NotificationDrawer } from './console/notification-drawer'
+import { useScrollPast } from '@/lib/lib/use-scroll-past'
 
 interface TopBarProps {
   variant?: 'public' | 'console'
@@ -13,13 +14,20 @@ interface TopBarProps {
 
 export function TopBar({ variant = 'public' }: TopBarProps) {
   const router = useRouter()
+  const scrolled = useScrollPast(500)
 
   async function logout() {
     await fetch('/api/auth/ranger', { method: 'DELETE' })
     router.push('/')
   }
 
-  const statusText = variant === 'console' ? '[ RANGER CONSOLE ACTIVE ]' : '[ PUBLIC DASHBOARD ]'
+  const statusText =
+    variant === 'console' ? '[ RANGER CONSOLE ACTIVE ]' : '[ PUBLIC DASHBOARD ]'
+
+  function scrollToReport() {
+    const el = document.getElementById('report-section')
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <header className="h-14 border-b bg-card/80 backdrop-blur-md flex items-center justify-between px-4 sticky top-0 z-50 flex-shrink-0">
@@ -41,11 +49,23 @@ export function TopBar({ variant = 'public' }: TopBarProps) {
         {statusText}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        {variant === 'public' && scrolled && (
+          <Button
+            onClick={scrollToReport}
+            size="sm"
+            className="gap-1.5 bg-[#BB0000] hover:bg-[#9A0000] text-white animate-in fade-in slide-in-from-right-4 duration-300"
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Report Incident</span>
+          </Button>
+        )}
         {variant === 'public' && (
           <>
             <Link href="/about" className="hidden sm:block">
-              <Button variant="ghost" size="sm">About</Button>
+              <Button variant="ghost" size="sm">
+                About
+              </Button>
             </Link>
             <Link href="/console/login">
               <Button variant="outline" size="sm" className="gap-2">

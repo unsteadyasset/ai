@@ -10,9 +10,28 @@ import { TopBar } from '@/components/top-bar'
 
 export default function ConsolePage() {
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden fixed inset-0">
+    <div
+      className="flex flex-col"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+      }}
+    >
       <TopBar variant="console" />
-      <div className="flex-1 relative w-full" style={{ height: 'calc(100vh - 56px)' }}>
+      <div
+        style={{
+          position: 'relative',
+          flex: 1,
+          width: '100%',
+          overflow: 'hidden',
+        }}
+      >
         <MapView />
         <LensPicker />
         <SideControls />

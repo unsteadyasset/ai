@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { groq, LLM_MODEL, SYSTEM_PROMPTS } from '@/lib/groq'
+import Groq from 'groq-sdk'
+
+export const runtime = 'nodejs'
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+})
+
+const LLM_MODEL = 'llama-3.3-70b-versatile'
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,7 +50,11 @@ Keep it under 200 words. Be tactical and specific.`
     const completion = await groq.chat.completions.create({
       model: LLM_MODEL,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPTS.threat_analysis },
+        {
+          role: 'system',
+          content:
+            'You are an AI analyst specialized in forest threat analysis. Be tactical, concise, and action-oriented.',
+        },
         { role: 'user', content: prompt },
       ],
       temperature: 0.5,
