@@ -5,7 +5,6 @@ import { ChevronDown, AlertTriangle, Satellite } from 'lucide-react'
 import { TopBar } from '@/components/top-bar'
 import { Button } from '@/components/ui/button'
 import { HeroSlideshow } from '@/components/landing/hero-slideshow'
-import { CustomCursor } from '@/components/landing/custom-cursor'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { Vision2032 } from '@/components/landing/vision-2032'
 import { Credits } from '@/components/landing/credits'
@@ -33,7 +32,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <CustomCursor />
       <TopBar variant="public" />
 
       {/* HERO */}
